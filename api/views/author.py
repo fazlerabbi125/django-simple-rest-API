@@ -1,6 +1,7 @@
 from rest_framework.request import Request, HttpRequest
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from ..models import *
 from ..serializers import *
@@ -8,7 +9,7 @@ from utils.common import success_response, failure_response
 
 
 @api_view(["GET", "POST"])
-def get_author_list_or_create(request: HttpRequest | Request):
+def authorList(request: HttpRequest | Request):
     match request.method:
         case "GET":
             authors = Author.objects.all()
@@ -18,7 +19,6 @@ def get_author_list_or_create(request: HttpRequest | Request):
                     data=serializer.data,
                     message="Authors successfully fetched.",
                 ),
-                status=status.HTTP_200_OK,
             )
         case "POST":
             serializer = AuthorSerializer(data=request.data)
@@ -40,75 +40,76 @@ def get_author_list_or_create(request: HttpRequest | Request):
             )
 
 
-@api_view(["GET", "PUT", "PATCH", "DELETE"])
-def get_author_details_or_update_or_delete(
-    request: HttpRequest | Request, authorId: int
-):
-    try:
-        author = Author.objects.get(pk=authorId)
-    except Author.DoesNotExist:
+class AuthorDetails(APIView):
+    def _get_object(self, pk: int):
+        return Author.objects.get(pk=pk)
+
+    def get(self, request: HttpRequest | Request, authorId: int):
+        author = self._get_object(authorId)
+        serializer = AuthorSerializer(author)
         return Response(
-            failure_response(
-                message="Author not found",
+            success_response(
+                data=serializer.data,
+                message="Author successfully fetched.",
             ),
-            status=status.HTTP_404_NOT_FOUND,
         )
-    match request.method:
-        case "GET":
-            serializer = AuthorSerializer(author)
+
+    def put(self, request: HttpRequest | Request, authorId: int):
+        # Complete update (as partial arg in serializer not provided or is false). Throws exception if all necessary fields are not present
+        author = self._get_object(authorId)
+        serializer = AuthorSerializer(instance=author, data=request.data)
+        if not serializer.is_valid():
             return Response(
-                success_response(
-                    data=serializer.data,
-                    message="Author successfully fetched.",
+                failure_response(
+                    errors=serializer.errors,
+                    message="Given data is invalid for author",
                 ),
-                status=status.HTTP_200_OK,
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
-        case "PUT":
-            # Complete update (as partial arg in serializer not provided or is false). Throws exception if all necessary fields are not present
-            serializer = AuthorSerializer(instance=author, data=request.data)
-            if not serializer.is_valid():
-                return Response(
-                    failure_response(
-                        errors=serializer.errors,
-                        message="Given data is invalid for author",
-                    ),
-                    status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                )
-            serializer.save()
+        serializer.save()
+        return Response(
+            success_response(
+                data=serializer.data,
+                message="Author successfully updated via PUT method.",
+            ),
+        )
+
+    def patch(self, request: HttpRequest | Request, authorId: int):
+        # Partial update (via partial=True). Fields which are not provided are not updated.
+        author = self._get_object(authorId)
+        serializer = AuthorSerializer(instance=author, data=request.data, partial=True)
+        if not serializer.is_valid():
             return Response(
-                success_response(
-                    data=serializer.data,
-                    message="Author successfully updated via PUT method.",
+                failure_response(
+                    errors=serializer.errors,
+                    message="Given data is invalid for author",
                 ),
-                status=status.HTTP_200_OK,
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
-        case "PATCH":
-            # Partial update (via partial=True). Fields which are not provided are not updated.
-            serializer = AuthorSerializer(
-                instance=author, data=request.data, partial=True
-            )
-            if not serializer.is_valid():
-                return Response(
-                    failure_response(
-                        errors=serializer.errors,
-                        message="Given data is invalid for author",
-                    ),
-                    status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                )
-            serializer.save()
+        serializer.save()
+        return Response(
+            success_response(
+                data=serializer.data,
+                message="Author successfully updated via PATCH method.",
+            ),
+        )
+
+    def delete(self, request: HttpRequest | Request, authorId: int):
+        author = self._get_object(authorId)
+        author.delete()
+        return Response(
+            success_response(message="Author successfully deleted."),
+            status=status.HTTP_204_NO_CONTENT,
+        )
+
+    def handle_exception(self, exc):
+        # Overriding parent exeception handler
+
+        if isinstance(exc, (Author.DoesNotExist)):
             return Response(
-                success_response(
-                    data=serializer.data,
-                    message="Author successfully updated via PATCH method.",
+                failure_response(
+                    message="Author not found",
                 ),
-                status=status.HTTP_200_OK,
+                status=status.HTTP_404_NOT_FOUND,
             )
-        case "DELETE":
-            serializer = AuthorSerializer(author)
-            author.delete()
-            return Response(
-                success_response(
-                    message="Author successfully deleted.", data=serializer.data
-                ),
-                status=status.HTTP_200_OK,
-            )
+        return super().handle_exception(exc)
