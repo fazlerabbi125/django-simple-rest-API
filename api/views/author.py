@@ -1,5 +1,4 @@
-from rest_framework.request import Request, HttpRequest
-from rest_framework import status
+from rest_framework import status, serializers
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,7 +8,7 @@ from utils.common import success_response, failure_response
 
 
 @api_view(["GET", "POST"])
-def authorList(request: HttpRequest | Request):
+def authorList(request):
     match request.method:
         case "GET":
             authors = Author.objects.all()
@@ -26,7 +25,7 @@ def authorList(request: HttpRequest | Request):
                 return Response(
                     failure_response(
                         errors=serializer.errors,
-                        message="Given data is invalid for author",
+                        message="Given data is invalid for Author",
                     ),
                     status=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 )
@@ -40,13 +39,16 @@ def authorList(request: HttpRequest | Request):
             )
 
 
-class AuthorDetails(APIView):
+class AuthorDetail(APIView):
     def _get_object(self, pk: int):
         return Author.objects.get(pk=pk)
 
-    def get(self, request: HttpRequest | Request, authorId: int):
+    def _get_serializer(self, *args, **kwargs):
+        return AuthorSerializer(*args, **kwargs)
+
+    def get(self, request, authorId: int):
         author = self._get_object(authorId)
-        serializer = AuthorSerializer(author)
+        serializer = self._get_serializer(author)
         return Response(
             success_response(
                 data=serializer.data,
@@ -54,18 +56,11 @@ class AuthorDetails(APIView):
             ),
         )
 
-    def put(self, request: HttpRequest | Request, authorId: int):
-        # Complete update (as partial arg in serializer not provided or is false). Throws exception if all necessary fields are not present
+    def put(self, request, authorId: int):
+        # Complete update (as partial arg in serializer is not provided or false here). Throws exception if all necessary fields are not present
         author = self._get_object(authorId)
-        serializer = AuthorSerializer(instance=author, data=request.data)
-        if not serializer.is_valid():
-            return Response(
-                failure_response(
-                    errors=serializer.errors,
-                    message="Given data is invalid for author",
-                ),
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
+        serializer = self._get_serializer(instance=author, data=request.data)
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
             success_response(
@@ -74,18 +69,13 @@ class AuthorDetails(APIView):
             ),
         )
 
-    def patch(self, request: HttpRequest | Request, authorId: int):
+    def patch(self, request, authorId: int):
         # Partial update (via partial=True). Fields which are not provided are not updated.
         author = self._get_object(authorId)
-        serializer = AuthorSerializer(instance=author, data=request.data, partial=True)
-        if not serializer.is_valid():
-            return Response(
-                failure_response(
-                    errors=serializer.errors,
-                    message="Given data is invalid for author",
-                ),
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
+        serializer = self._get_serializer(
+            instance=author, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
             success_response(
@@ -94,7 +84,7 @@ class AuthorDetails(APIView):
             ),
         )
 
-    def delete(self, request: HttpRequest | Request, authorId: int):
+    def delete(self, request, authorId: int):
         author = self._get_object(authorId)
         author.delete()
         return Response(
@@ -104,12 +94,19 @@ class AuthorDetails(APIView):
 
     def handle_exception(self, exc):
         # Overriding parent exeception handler
-
         if isinstance(exc, (Author.DoesNotExist)):
             return Response(
                 failure_response(
                     message="Author not found",
                 ),
                 status=status.HTTP_404_NOT_FOUND,
+            )
+        elif isinstance(exc, serializers.ValidationError):
+            return Response(
+                failure_response(
+                    errors=exc.detail,
+                    message="Given data is invalid for Author",
+                ),
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         return super().handle_exception(exc)

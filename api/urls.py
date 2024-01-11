@@ -16,12 +16,23 @@ Including another URLconf
 """
 from django.urls import path
 from .views.author import *
+from .views.blog import *
 
 urlpatterns = [
-    path("authors/", authorList, name="author_list_or_create"),
+    path("authors/", authorList, name="author_list_create"),
     path(
         "authors/<int:authorId>/",
-        AuthorDetails.as_view(),
-        name="author_details_or_update_or_delete",
+        AuthorDetail.as_view(),
+        name="author_retrieve_update_delete",
+    ),
+    path(
+        "blogs/",
+        BlogList.as_view(),
+        name="blog_list_create",
+    ),
+     path(
+        "blogs/<int:blogId>/",
+        BlogDetail.as_view(),
+        name="blog_retrieve_update_delete",
     ),
 ]
