@@ -31,6 +31,7 @@ def authorList(request):
                     status=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 )
             serializer.save()
+            # To get only the validated incoming data (consists only the fields passed), use serializer.validated_data
             return Response(
                 success_response(
                     data=serializer.data,

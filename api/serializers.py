@@ -1,6 +1,20 @@
 from .models import *
 from rest_framework import serializers
 
+# https://www.django-rest-framework.org/api-guide/serializers/
+# https://www.django-rest-framework.org/api-guide/fields/
+
+
+class BlogSerializer(serializers.ModelSerializer):
+    """
+    Object-level custom validation: https://www.django-rest-framework.org/api-guide/serializers/#object-level-validation
+    Field-level custom validation: https://www.django-rest-framework.org/api-guide/serializers/#field-level-validation
+    """
+
+    class Meta:
+        model = Blog
+        fields = "__all__"
+
 
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,17 +22,11 @@ class AuthorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class BlogSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Blog
-        fields = "__all__"
-
-
 class EntrySerializer(serializers.ModelSerializer):
     """
     Overriding the default serializer fields with the same name.
     Instead of the depth meta options, serializers should be used for related fields
-    tp allow customization
+    to allow customization for the nested object
     """
 
     blog = BlogSerializer()
@@ -27,4 +35,4 @@ class EntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Entry
         fields = "__all__"
-        # depth=1 #it allows you to return all the fields of a related field instead of just getting their primary key values
+        # depth=1 #it allows you to return all the fields of its related field as a nested object instead of just getting their primary key values
