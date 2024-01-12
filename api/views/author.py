@@ -1,4 +1,5 @@
-from rest_framework import status, serializers
+from django.shortcuts import get_object_or_404
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -41,7 +42,7 @@ def authorList(request):
 
 class AuthorDetail(APIView):
     def _get_object(self, pk: int):
-        return Author.objects.get(pk=pk)
+        return get_object_or_404(Author, pk=pk)
 
     def _get_serializer(self, *args, **kwargs):
         return AuthorSerializer(*args, **kwargs)
@@ -91,22 +92,3 @@ class AuthorDetail(APIView):
             success_response(message="Author successfully deleted."),
             status=status.HTTP_204_NO_CONTENT,
         )
-
-    def handle_exception(self, exc):
-        # Overriding parent exeception handler
-        if isinstance(exc, (Author.DoesNotExist)):
-            return Response(
-                failure_response(
-                    message="Author not found",
-                ),
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        elif isinstance(exc, serializers.ValidationError):
-            return Response(
-                failure_response(
-                    errors=exc.detail,
-                    message="Given data is invalid for Author",
-                ),
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-        return super().handle_exception(exc)

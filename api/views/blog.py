@@ -1,11 +1,8 @@
-from django.http import Http404
 from rest_framework import status, generics
-from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from ..models import *
 from ..serializers import *
-from utils.common import success_response, failure_response
-
+from utils.common import success_response
 
 class BlogList(generics.GenericAPIView):
     queryset = Blog.objects.all()
@@ -23,14 +20,7 @@ class BlogList(generics.GenericAPIView):
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            raise APIException(
-                detail=failure_response(
-                    errors=serializer.errors,
-                    message="Given data is invalid for Blog",
-                ),
-                code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
             success_response(
@@ -61,14 +51,7 @@ class BlogDetail(generics.GenericAPIView):
     def patch(self, request, *args, **kwargs):
         blog = self.get_object()
         serializer = self.get_serializer(blog, data=request.data, partial=True)
-        if not serializer.is_valid():
-            raise APIException(
-                detail=failure_response(
-                    errors=serializer.errors,
-                    message="Given data is invalid for Blog",
-                ),
-                code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
+        serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
             success_response(
@@ -85,13 +68,14 @@ class BlogDetail(generics.GenericAPIView):
             status=status.HTTP_204_NO_CONTENT,
         )
 
-    def handle_exception(self, exc):
-        # Overriding parent exeception handler
-        if isinstance(exc, Http404):
-            return Response(
-                failure_response(
-                    message="Blog not found",
-                ),
-                status=status.HTTP_404_NOT_FOUND,
-            )
-        return super().handle_exception(exc)
+    # from django.http import Http404
+    # def handle_exception(self, exc):
+    #     # Overriding parent exeception handler
+    #     if isinstance(exc, Http404):
+    #         return Response(
+    #             failure_response(
+    #                 message="Blog not found",
+    #             ),
+    #             status=status.HTTP_404_NOT_FOUND,
+    #         )
+    #     return super().handle_exception(exc)
