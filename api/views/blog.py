@@ -1,14 +1,14 @@
 from rest_framework import status, generics
 from rest_framework.response import Response
-from ..models import *
-from ..serializers import *
+from ..models import Blog
+from ..serializers import BlogSerializer
 from utils.common import success_response
 
 class BlogList(generics.GenericAPIView):
     queryset = Blog.objects.all()
     serializer_class = BlogSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         blog_list = self.get_queryset()
         serializer = self.get_serializer(blog_list, many=True)
         return Response(
@@ -19,7 +19,7 @@ class BlogList(generics.GenericAPIView):
         )
 
     def post(self, request):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
@@ -37,7 +37,7 @@ class BlogDetail(generics.GenericAPIView):
     lookup_url_kwarg = "blogId"
     # lookup_field = 'pk'
 
-    #kwargs important for getting URL parameter
+    # kwargs important for getting URL parameter
     def get(self, request, *args, **kwargs):
         blog = self.get_object()
         serializer = self.get_serializer(blog)
@@ -50,7 +50,7 @@ class BlogDetail(generics.GenericAPIView):
 
     def patch(self, request, *args, **kwargs):
         blog = self.get_object()
-        serializer = self.get_serializer(blog, data=request.data, partial=True)
+        serializer = self.serializer_class(blog, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
@@ -61,7 +61,7 @@ class BlogDetail(generics.GenericAPIView):
         )
 
     def delete(self, request, *args, **kwargs):
-        blog = self.get_object()
+        blog: Blog = self.get_object()
         blog.delete()
         return Response(
             success_response(message="Blog successfully deleted."),

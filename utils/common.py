@@ -1,7 +1,6 @@
 from typing import Any, Optional
 
-
-def success_response(message: str, data: Any = None) -> dict:
+def success_response(message: str, data: Any = None):
     return {
         "success": True,
         "message": message,
@@ -9,9 +8,7 @@ def success_response(message: str, data: Any = None) -> dict:
     }
 
 
-def failure_response(
-    message: str, errors: Optional[dict[str, list[str]]] = None
-) -> dict:
+def failure_response(message: str, errors: Optional[dict[str, list[str]]] = None):
     return {
         "success": False,
         "message": message,

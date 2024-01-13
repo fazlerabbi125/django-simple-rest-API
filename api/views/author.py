@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from ..models import *
-from ..serializers import *
+from ..models import Author
+from ..serializers import AuthorSerializer
 from utils.common import success_response, failure_response
 
 
@@ -43,7 +43,7 @@ def authorList(request):
 
 class AuthorDetail(APIView):
     def _get_object(self, pk: int):
-        return get_object_or_404(Author, pk=pk)
+        return get_object_or_404(Author, pk=pk) #first arg can be either Model, Manager, or QuerySet object
 
     def _get_serializer(self, *args, **kwargs):
         return AuthorSerializer(*args, **kwargs)

@@ -14,9 +14,25 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.urls import path
+from django.urls import path, include
 from .views.author import *
 from .views.blog import *
+from .views.entry import EntryViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+"""
+DefaultRouter provide a default API root view, that returns a response containing hyperlinks to all the registered list views
+to perform API CRUD operations online as well as other behavior:
+#https://www.django-rest-framework.org/api-guide/routers/#defaultrouter
+
+Adding router to URL config:
+https://www.django-rest-framework.org/api-guide/routers/#usage
+https://www.django-rest-framework.org/api-guide/routers/#using-include-with-routers
+"""
+router.register(r"entries", EntryViewSet, basename="entry")
+# first arg in router register sets the prefix used by the path and basename is used as part of route name
+# We can also bind ViewSets explicitly: https://www.django-rest-framework.org/tutorial/6-viewsets-and-routers/#binding-viewsets-to-urls-explicitly
 
 urlpatterns = [
     path("authors/", authorList, name="author_list_create"),
@@ -30,9 +46,12 @@ urlpatterns = [
         BlogList.as_view(),
         name="blog_list_create",
     ),
-     path(
+    path(
         "blogs/<int:blogId>/",
         BlogDetail.as_view(),
         name="blog_retrieve_update_delete",
     ),
+    path(
+        "", include(router.urls)
+    ),  # or simply assign/append router.urls to urlpatterns:
 ]
