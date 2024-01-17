@@ -16,13 +16,14 @@ class BlogSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class AuthorSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Author
+        model = User
         fields = "__all__"
+        extra_kwargs = {"password": {"write_only": True}}
 
 
-class EntrySerializer(serializers.ModelSerializer):
+class AuthorSerializer(serializers.ModelSerializer):
     """
     The depth Meta options allows you to return all the fields of its relational field as a nested object
     instead of just getting their primary key values. However, serializers should be used for relational fields instead
@@ -31,6 +32,23 @@ class EntrySerializer(serializers.ModelSerializer):
     create create() and/or update() methods in order to explicitly specify how the child relationships should be saved
     """
 
+    user = UserSerializer()
+
+    def create(self, validated_data: dict):
+        validated_data["user"] = self.fields["user"].create(validated_data.pop("user"))
+        return super().create(validated_data)
+
+    def update(self, instance: Author, validated_data: dict):
+        self.fields["user"].update(instance.user, validated_data.pop("user"))
+        return super().update(instance, validated_data)
+
+    class Meta:
+        model = Author
+        fields = "__all__"
+        # depth=1
+
+
+class EntrySerializer(serializers.ModelSerializer):
     def to_representation(self, obj: Entry):
         # To get relational fields as nested objects only during read operation
         res = super().to_representation(obj)
@@ -41,4 +59,3 @@ class EntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Entry
         fields = "__all__"
-        # depth=1

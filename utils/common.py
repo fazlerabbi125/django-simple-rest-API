@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any, Optional
 
 def success_response(message: str, data: Any = None):
@@ -14,3 +15,8 @@ def failure_response(message: str, errors: Optional[dict[str, list[str]]] = None
         "message": message,
         "errors": errors,
     }
+
+
+class USER_ROLES(Enum):
+    ADMIN = "admin"
+    MEMBER = "member"

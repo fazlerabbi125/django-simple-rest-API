@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse, HttpRequest
 from rest_framework import status
+from django.conf import settings
+from django.conf.urls.static import static
 from utils.common import failure_response
 
 """
@@ -44,7 +46,8 @@ handler500 = error_view_closure("A server error occurred.")
 
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("api-auth/", include("rest_framework.urls")),
+    # Implement custom user backend and ModelAdmin class to use django admin view with custom user model 
+    # path("admin/", admin.site.urls),
+    # path("api-auth/", include("rest_framework.urls")),
     path("api/", include("api.urls")),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,15 +1,15 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import status, request
 from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from ..models import Author
 from ..serializers import AuthorSerializer
-from utils.common import success_response, failure_response
+from utils.common import success_response, failure_response, USER_ROLES
 
 
 @api_view(["GET", "POST"])
-def authorList(request):
+def authorList(request: request.Request):
     match request.method:
         case "GET":
             authors = Author.objects.all()
@@ -21,7 +21,9 @@ def authorList(request):
                 ),
             )
         case "POST":
-            serializer = AuthorSerializer(data=request.data)
+            data = request.data.copy() # get mutable copy of QueryDict
+            data["user.role"] = USER_ROLES.MEMBER.value
+            serializer = AuthorSerializer(data=data)
             if not serializer.is_valid():
                 return Response(
                     failure_response(
@@ -43,7 +45,9 @@ def authorList(request):
 
 class AuthorDetail(APIView):
     def _get_object(self, pk: int):
-        return get_object_or_404(Author, pk=pk) #first arg can be either Model, Manager, or QuerySet object
+        return get_object_or_404(
+            Author, pk=pk
+        )  # first arg can be either Model, Manager, or QuerySet object
 
     def _get_serializer(self, *args, **kwargs):
         return AuthorSerializer(*args, **kwargs)
@@ -58,10 +62,12 @@ class AuthorDetail(APIView):
             ),
         )
 
-    def put(self, request, authorId: int):
+    def put(self, request: request.Request, authorId: int):
         # Complete update (as partial arg in serializer is not provided or false here). Throws exception if all necessary fields are not present
         author = self._get_object(authorId)
-        serializer = self._get_serializer(instance=author, data=request.data)
+        data = request.data.copy()
+        data["user.role"] = USER_ROLES.MEMBER.value
+        serializer = self._get_serializer(instance=author, data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
@@ -71,12 +77,14 @@ class AuthorDetail(APIView):
             ),
         )
 
-    def patch(self, request, authorId: int):
+    def patch(self, request: request.Request, authorId: int):
         # Partial update (via partial=True). Fields which are not provided are not updated.
         author = self._get_object(authorId)
-        serializer = self._get_serializer(
-            instance=author, data=request.data, partial=True
-        )
+        data = request.data.copy()
+        data["user.role"] = USER_ROLES.MEMBER.value
+        if author.user.email == data.get("user.email"):
+            data.pop("user.email")
+        serializer = self._get_serializer(instance=author, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
