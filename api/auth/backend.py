@@ -1,7 +1,23 @@
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth import get_user_model
 
-class MyBackend(BaseBackend):
-    def authenticate(self, request, token=None):
-        # Check the token and return a user.
-        pass
+class CustomUserBackend(BaseBackend):
+    def authenticate(self, request, email: str, password: str, **kwargs):
+        # Authenticate custom user
+        User = get_user_model()
+
+        try:
+            user = User.objects.get(email=email)
+            if user.check_password(password): return user
+        
+        except User.DoesNotExist: pass
+        
+        return None
+
+    def get_user(self, user_id):
+        User = get_user_model()
+
+        try:
+            return User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return None

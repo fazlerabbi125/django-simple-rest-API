@@ -6,8 +6,8 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user:AbstractBaseUser = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.full_clean()
-        user.save()
+        user.full_clean() # Trigger validation for model fields
+        user.save(using=self._db)
         return user
 
     def create_superuser(self, email: str, password: str, **extra_fields):

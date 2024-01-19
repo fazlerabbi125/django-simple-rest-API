@@ -75,8 +75,9 @@ class User(AbstractBaseUser):
     last_login: None = None
 
     USERNAME_FIELD = "email"
+    EMAIL_FIELD = "email"
     REQUIRED_FIELDS = ["name"] #fields prompted when creating a user via the createsuperuser management command
-    objects = CustomUserManager()
+    objects: CustomUserManager = CustomUserManager()
     
     def __str__(self) -> str:
         return f"{self.pk}-{self.email}"

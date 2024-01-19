@@ -46,7 +46,7 @@ handler500 = error_view_closure("A server error occurred.")
 
 
 urlpatterns = [
-    # Implement custom user backend and ModelAdmin class to use django admin view with custom user model 
+    # To use django admin view with custom user model, do the following: https://docs.djangoproject.com/en/5.0/topics/auth/customizing/#custom-users-and-django-contrib-admin
     # path("admin/", admin.site.urls),
     # path("api-auth/", include("rest_framework.urls")),
     path("api/", include("api.urls")),
