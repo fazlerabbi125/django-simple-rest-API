@@ -18,6 +18,7 @@ from django.urls import path, include
 from .views.author import *
 from .views.blog import *
 from .views.entry import EntryViewSet
+from .views.user import *
 from rest_framework.routers import DefaultRouter
 
 router = DefaultRouter()
@@ -53,5 +54,6 @@ urlpatterns = [
     ),
     path(
         "", include(router.urls)
-    ),  # or simply assign/append router.urls to urlpatterns:
+    ),  # or simply assign/append router.urls to urlpatterns
+    path('login/', login)
 ]

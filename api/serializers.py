@@ -18,17 +18,16 @@ class BlogSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    
     def create(self, validated_data: dict):
         validated_data["password"] = make_password(validated_data["password"])
         return super().create(validated_data)
-    
+
     def update(self, instance, validated_data: dict):
         if "password" in validated_data:
             validated_data["password"] = make_password(validated_data["password"])
 
         return super().update(instance, validated_data)
-    
+
     class Meta:
         model = User
         fields = "__all__"
@@ -71,3 +70,15 @@ class EntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Entry
         fields = "__all__"
+
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(
+        label="Email",
+        trim_whitespace=False,
+    )
+    password = serializers.CharField(
+        label="Password",
+        style={"input_type": "password"},
+        trim_whitespace=False,
+    )
