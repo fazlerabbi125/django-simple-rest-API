@@ -19,4 +19,4 @@ def failure_response(message: str, errors: Optional[dict[str, list[str]]] = None
 
 class USER_ROLES(Enum):
     ADMIN = "admin"
-    MEMBER = "member"
+    AUTHOR = "author"

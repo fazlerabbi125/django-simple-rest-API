@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import status, request
-from rest_framework.decorators import api_view
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from ..models import Author
@@ -8,39 +7,41 @@ from ..serializers import AuthorSerializer
 from utils.common import success_response, failure_response, USER_ROLES
 
 
-@api_view(["GET", "POST"])
-def authorList(request: request.Request):
-    match request.method:
-        case "GET":
-            authors = Author.objects.all()
-            serializer = AuthorSerializer(authors, many=True)
+class AuthorList(APIView):
+    model = Author
+    serializer_class = AuthorSerializer
+    
+    def get(self, request: request.Request, *args, **kwargs):
+        authors = self.model.objects.all()
+        serializer = self.serializer_class(authors, many=True)
+        return Response(
+            success_response(
+                data=serializer.data,
+                message="Authors successfully fetched.",
+            ),
+        )
+
+    def post(self, request: request.Request):
+        data = request.data.copy()  # get mutable copy of QueryDict
+        data["user.role"] = USER_ROLES.AUTHOR.value
+        serializer = self.serializer_class(data=data)
+        if not serializer.is_valid():
             return Response(
-                success_response(
-                    data=serializer.data,
-                    message="Authors successfully fetched.",
+                failure_response(
+                    errors=serializer.errors,
+                    message="The given data was invalid",
                 ),
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
-        case "POST":
-            data = request.data.copy() # get mutable copy of QueryDict
-            data["user.role"] = USER_ROLES.MEMBER.value
-            serializer = AuthorSerializer(data=data)
-            if not serializer.is_valid():
-                return Response(
-                    failure_response(
-                        errors=serializer.errors,
-                        message="Given data is invalid for Author",
-                    ),
-                    status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                )
-            serializer.save()
-            # To get only the validated incoming data (consists only the fields passed), use serializer.validated_data
-            return Response(
-                success_response(
-                    data=serializer.data,
-                    message="Author successfully created.",
-                ),
-                status=status.HTTP_201_CREATED,
-            )
+        serializer.save()
+        # To get only the validated incoming data (consists only the fields passed), use serializer.validated_data
+        return Response(
+            success_response(
+                data=serializer.data,
+                message="Author successfully created.",
+            ),
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class AuthorDetail(APIView):
@@ -66,7 +67,7 @@ class AuthorDetail(APIView):
         # Complete update (as partial arg in serializer is not provided or false here). Throws exception if all necessary fields are not present
         author = self._get_object(authorId)
         data = request.data.copy()
-        data["user.role"] = USER_ROLES.MEMBER.value
+        data["user.role"] = USER_ROLES.AUTHOR.value
         serializer = self._get_serializer(instance=author, data=data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -81,7 +82,7 @@ class AuthorDetail(APIView):
         # Partial update (via partial=True). Fields which are not provided are not updated.
         author = self._get_object(authorId)
         data = request.data.copy()
-        data["user.role"] = USER_ROLES.MEMBER.value
+        data["user.role"] = USER_ROLES.AUTHOR.value
         if author.user.email == data.get("user.email"):
             data.pop("user.email")
         serializer = self._get_serializer(instance=author, data=data, partial=True)

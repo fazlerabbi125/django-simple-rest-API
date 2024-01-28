@@ -36,7 +36,7 @@ router.register(r"entries", EntryViewSet, basename="entry")
 # We can also bind ViewSets explicitly: https://www.django-rest-framework.org/tutorial/6-viewsets-and-routers/#binding-viewsets-to-urls-explicitly
 
 urlpatterns = [
-    path("authors/", authorList, name="author_list_create"),
+    path("authors/", AuthorList.as_view(), name="author_list_create"),
     path(
         "authors/<int:authorId>/",
         AuthorDetail.as_view(),
@@ -55,5 +55,7 @@ urlpatterns = [
     path(
         "", include(router.urls)
     ),  # or simply assign/append router.urls to urlpatterns
-    path('login/', login)
+    path("login/", login),
+    path("logout/", logout),
+    path('token-renew/', renew_tokens)
 ]
