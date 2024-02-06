@@ -1,3 +1,4 @@
+from typing import Any
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.core.validators import (
@@ -9,6 +10,13 @@ from .auth.manager import CustomUserManager
 from utils.common import USER_ROLES
 
 # Create your models here.
+"""
+3 ways to define a model in Django:
+1) Define it directly in the models.py file
+2) https://docs.djangoproject.com/en/5.0/topics/db/models/#organizing-models-in-a-package
+3) Define it somewhere completely different and just import the models into the models.py
+"""
+
 
 class Blog(models.Model):
     name = models.CharField(max_length=255)
@@ -18,9 +26,43 @@ class Blog(models.Model):
         return f"{self.pk}-{self.name}"
 
 
+class User(AbstractBaseUser):
+    name = models.CharField("full name", max_length=255)
+    email = models.EmailField("email address", unique=True)
+    createdAt = models.DateField(auto_now_add=True)
+    photo = models.ImageField(
+        "profile photo",
+        blank=True,
+        null=True,
+        validators=[
+            FileExtensionValidator(allowed_extensions=["jpg", "png", "jpeg", "webp"])
+        ],
+    )  # by default retrieves file from media root
+    role = models.CharField(
+        max_length=50,
+        choices=[(role.value, role.name.capitalize()) for role in USER_ROLES],
+    )
+    is_active: None = None  # Remove inherited User attributes
+    last_login: None = None
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = [
+        "name",
+    ]  # fields prompted when creating a user via the createsuperuser management command
+    objects: CustomUserManager = CustomUserManager()
+
+    def __str__(self) -> str:
+        return f"{self.pk}-{self.email}"
+
+    def delete(self, *args, **kwargs) -> tuple[int, dict[str, int]]:
+        if self.photo:
+            self.photo.delete()
+        return super().delete(*args, **kwargs)
+
+
 class Author(models.Model):
     user = models.OneToOneField(
-        "User",
+        User,
         on_delete=models.CASCADE,
         unique=True,
     )
@@ -28,9 +70,9 @@ class Author(models.Model):
 
     def __str__(self):
         return f"{self.pk}-{self.user.name}"
-    
+
     def delete(self, *args, **kwargs) -> tuple[int, dict[str, int]]:
-        deleted_user =self.user
+        deleted_user = self.user
         deleted_user.delete()
         return super().delete(*args, **kwargs)
 
@@ -53,31 +95,3 @@ class Entry(models.Model):
 
     class Meta:
         ordering = ["pub_date"]
-
-
-class User(AbstractBaseUser):
-    name = models.CharField("full name", max_length=255)
-    email = models.EmailField("email address", unique=True)
-    createdAt = models.DateField(auto_now_add=True)
-    photo = models.ImageField(
-        "profile photo",
-        blank=True,
-        null=True,
-        validators=[
-            FileExtensionValidator(allowed_extensions=["jpg", "png", "jpeg", "webp"])
-        ],
-    )  # by default retrieves file from media root
-    role = models.CharField(
-        max_length=50,
-        choices=[(role.value, role.name.capitalize()) for role in USER_ROLES],
-    )
-    is_active: None = None # Remove inherited User attributes
-    last_login: None = None
-
-    USERNAME_FIELD = "email"
-    EMAIL_FIELD = "email"
-    REQUIRED_FIELDS = ["name"] #fields prompted when creating a user via the createsuperuser management command
-    objects: CustomUserManager = CustomUserManager()
-    
-    def __str__(self) -> str:
-        return f"{self.pk}-{self.email}"

@@ -10,6 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from ..auth import permissions as custom_permissions
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
 
+
 @api_view(["POST"])
 @permission_classes([custom_permissions.IsGuest])
 def login(request: request.Request):
@@ -41,7 +42,8 @@ def login(request: request.Request):
 @permission_classes([permissions.IsAuthenticated])
 def logout(request: request.Request):
     try:
-        refresh_token = request.data.get("refresh_token")
+        refresh_token = request.data.get("refresh_token", "")
+        # new token if first arg is None; otherwise decode and validate the encoded token given by the first arg
         token = RefreshToken(refresh_token)
         token.blacklist()
 
@@ -66,10 +68,13 @@ def renew_tokens(request: request.Request):
         new_refresh_token = RefreshToken.for_user(user)
 
         return Response(
-            success_response(message="Renewal successful", data={
-                "refresh_token": str(new_refresh_token),
-                "access_token": str(new_refresh_token.access_token),
-                }),
+            success_response(
+                message="Renewal successful",
+                data={
+                    "refresh_token": str(new_refresh_token),
+                    "access_token": str(new_refresh_token.access_token),
+                },
+            ),
         )
     except Exception as e:
         return Response(

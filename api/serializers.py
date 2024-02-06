@@ -1,10 +1,12 @@
 from .models import *
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
+from utils.handle_file import change_filename
 
 # https://www.django-rest-framework.org/api-guide/serializers/
 # https://www.django-rest-framework.org/api-guide/fields/
 # https://www.django-rest-framework.org/api-guide/relations/
+
 
 class BlogSerializer(serializers.ModelSerializer):
     """
@@ -20,11 +22,18 @@ class BlogSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data: dict):
         validated_data["password"] = make_password(validated_data["password"])
+        if "photo" in validated_data:
+            validated_data["photo"].name = change_filename(validated_data["photo"])
+
         return super().create(validated_data)
 
-    def update(self, instance, validated_data: dict):
+    def update(self, instance: User, validated_data: dict):
         if "password" in validated_data:
             validated_data["password"] = make_password(validated_data["password"])
+
+        if "photo" in validated_data:
+            if instance.photo: instance.photo.delete()
+            validated_data["photo"].name = change_filename(validated_data["photo"])
 
         return super().update(instance, validated_data)
 

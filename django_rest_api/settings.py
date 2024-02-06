@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import os
+import secrets
 from pathlib import Path
 from datetime import timedelta
 from dotenv import load_dotenv
@@ -147,9 +148,11 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(
+        minutes=5
+    ),  # A timedelta object represents duration, the difference between two datetime or date instances.
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "SIGNING_KEY": os.getenv("JWT_TOKEN_KEY", "d7732a4052ea649c517e"),
+    "SIGNING_KEY": os.getenv("JWT_TOKEN_KEY", secrets.token_hex(16)),
     "AUTH_HEADER_TYPES": ("Bearer",),
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
     "USER_ID_FIELD": "id",
