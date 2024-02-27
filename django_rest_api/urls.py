@@ -14,7 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
+from api.admin import admin_site
 from django.urls import path, include
 from django.http import JsonResponse, HttpRequest
 from rest_framework import status
@@ -47,7 +47,7 @@ handler500 = error_view_closure("A server error occurred.")
 
 urlpatterns = [
     # To use django admin view with custom user model, do the following: https://docs.djangoproject.com/en/5.0/topics/auth/customizing/#custom-users-and-django-contrib-admin
-    # path("admin/", admin.site.urls),
+    # path("admin/", admin_site.urls),
     # path("api-auth/", include("rest_framework.urls")),
     path("api/", include("api.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
