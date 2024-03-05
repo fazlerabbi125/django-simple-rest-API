@@ -1,5 +1,6 @@
 import os
 import time
+from uuid import uuid4
 from django.core.files.uploadedfile import UploadedFile
 
 # https://docs.djangoproject.com/en/5.0/ref/files/file/
@@ -9,11 +10,11 @@ from django.core.files.uploadedfile import UploadedFile
 # https://docs.python.org/3/library/os.path.html
 
 
-def change_filename(file: UploadedFile, extraInfo: str = "") -> str:
+def change_filename(file: UploadedFile) -> str:
     file_name, file_extension = os.path.splitext(file.name)  # Unpacking tuple
-    return "{time}-{extraInfo}{file}".format(
+    return "{time}_{extraInfo}{file}".format(
         time=str(round(time.time())),
-        extraInfo=extraInfo + "-" if extraInfo else "",
+        extraInfo=uuid4().hex(),
         file=file_name.replace("\\", "") + file_extension,
     )
 

@@ -1,4 +1,3 @@
-from typing import Any
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.core.validators import (
@@ -6,8 +5,11 @@ from django.core.validators import (
     MinValueValidator,
     FileExtensionValidator,
 )
+from django.dispatch import receiver
+from django.db.models.signals import post_delete
 from .auth.manager import CustomUserManager
 from utils.common import USER_ROLES
+from utils.handle_file import checkFileExists
 
 # Create your models here.
 """
@@ -54,11 +56,6 @@ class User(AbstractBaseUser):
     def __str__(self) -> str:
         return f"{self.pk}-{self.email}"
 
-    def delete(self, *args, **kwargs) -> tuple[int, dict[str, int]]:
-        if self.photo:
-            self.photo.delete()
-        return super().delete(*args, **kwargs)
-
 
 class Author(models.Model):
     user = models.OneToOneField(
@@ -95,3 +92,12 @@ class Entry(models.Model):
 
     class Meta:
         ordering = ["pub_date"]
+
+
+# https://docs.djangoproject.com/en/5.0/topics/signals/
+# https://docs.djangoproject.com/en/5.0/ref/signals/
+@receiver(post_delete, sender=User)
+def post_delete_user_photo(sender, instance: User, *args, **kwargs):
+    """Delete file field when model instance or queryset is deleted"""
+    if instance.photo and checkFileExists(instance.photo.path):
+        instance.photo.delete()

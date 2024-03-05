@@ -22,7 +22,7 @@ class BlogSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data: dict):
         validated_data["password"] = make_password(validated_data["password"])
-        if "photo" in validated_data:
+        if validated_data.get("photo"):
             validated_data["photo"].name = change_filename(validated_data["photo"])
 
         return super().create(validated_data)
@@ -31,8 +31,9 @@ class UserSerializer(serializers.ModelSerializer):
         if "password" in validated_data:
             validated_data["password"] = make_password(validated_data["password"])
 
-        if "photo" in validated_data:
-            if instance.photo: instance.photo.delete()
+        if validated_data.get("photo"):
+            if instance.photo:
+                instance.photo.delete()
             validated_data["photo"].name = change_filename(validated_data["photo"])
 
         return super().update(instance, validated_data)
