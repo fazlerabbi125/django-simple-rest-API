@@ -1,8 +1,9 @@
 # django-simple-rest-API
 
 ## Create and activate virtual environment
-https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/
-https://code.visualstudio.com/docs/python/environments
+- https://docs.python.org/3/library/venv.html
+- https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/
+- https://code.visualstudio.com/docs/python/environments
 
 Use it for installing packages according to Python version
 
