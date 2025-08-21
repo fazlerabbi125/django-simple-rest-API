@@ -53,6 +53,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         "name",
     ]  # fields prompted when creating a user via the createsuperuser management command
     objects: CustomUserManager = CustomUserManager()
+    
+    def has_perm(self, perm, obj=None):
+        if self.role == USER_ROLES.ADMIN.value:
+            return True
+        return super().has_perm(perm, obj)
+
+    def has_module_perms(self, app_label):
+        if self.role == USER_ROLES.ADMIN.value:
+            return True
+        return super().has_module_perms(app_label)
 
     def __str__(self) -> str:
         return f"{self.pk}-{self.email}"
