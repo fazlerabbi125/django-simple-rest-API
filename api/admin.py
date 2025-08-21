@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.core.handlers.wsgi import WSGIRequest
+from django.contrib.auth.admin import GroupAdmin
+from django.contrib.auth.models import Group, Permission
 from .forms import CustomAdminAuthForm
 from .models import *
 
@@ -12,8 +14,10 @@ class MyAdminSite(admin.AdminSite):
     def has_permission(self, request: WSGIRequest) -> bool:
         return request.user.is_authenticated and request.user.role == USER_ROLES.ADMIN.value
 
-admin_site = MyAdminSite()
 
+admin_site = MyAdminSite()
+admin_site.register(Group, GroupAdmin)
+admin_site.register(Permission)
 admin_site.register(User)
 admin_site.register(Blog)
 admin_site.register(Author)
