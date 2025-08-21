@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from api.admin import admin_site
 from django.urls import path, include
 from django.http import JsonResponse, HttpRequest
@@ -29,7 +30,12 @@ You have to set the following for these to take effect:
 DEBUG = False
 
 ALLOWED_HOSTS = ['*'] for any host or a list of specific allowed hosts
+
+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) and + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) can be used to serve media and static files in development where DEBUG is set to True. This is not suitable for production use!
+Common strageies for doing so includes using whitenoise or doing the following:
+https://docs.djangoproject.com/en/5.2/howto/static-files/deployment/
 """
+
 
 def error_view_closure(
     message: str,
@@ -44,10 +50,13 @@ def error_view_closure(
 handler404 = error_view_closure("Not found.", status.HTTP_404_NOT_FOUND)
 handler500 = error_view_closure("A server error occurred.")
 
-
-urlpatterns = [
-    # To use django admin view with custom user model, do the following: https://docs.djangoproject.com/en/5.0/topics/auth/customizing/#custom-users-and-django-contrib-admin
-    # path("admin/", admin_site.urls),
-    # path("api-auth/", include("rest_framework.urls")),
-    path("api/", include("api.urls")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns = (
+    [
+        # To use django admin view with custom user model, do the following: https://docs.djangoproject.com/en/5.0/topics/auth/customizing/#custom-users-and-django-contrib-admin
+        path("admin/", admin_site.urls),
+        # path("api-auth/", include("rest_framework.urls")),
+        path("api/", include("api.urls")),
+    ]
+    + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+)

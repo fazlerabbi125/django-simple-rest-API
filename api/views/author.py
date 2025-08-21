@@ -3,17 +3,22 @@ from rest_framework import status, request
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from ..models import Author
-from ..serializers import AuthorSerializer
+from ..serializers import AuthorInputSerializer, AuthorSerializer
 from utils.common import success_response, failure_response, USER_ROLES
 
 
 class AuthorList(APIView):
     model = Author
-    serializer_class = AuthorSerializer
-    
+    # serializer_class = AuthorSerializer
+
+    def _get_serializer_class(self, input: bool = False):
+        if input:
+            return AuthorInputSerializer
+        return AuthorSerializer
+
     def get(self, request: request.Request, *args, **kwargs):
         authors = self.model.objects.all()
-        serializer = self.serializer_class(authors, many=True)
+        serializer = self._get_serializer_class()(authors, many=True)
         return Response(
             success_response(
                 data=serializer.data,
@@ -24,7 +29,7 @@ class AuthorList(APIView):
     def post(self, request: request.Request):
         data = request.data.copy()  # get mutable copy of QueryDict
         data["user.role"] = USER_ROLES.AUTHOR.value
-        serializer = self.serializer_class(data=data)
+        serializer = self._get_serializer_class(input=True)(data=data)
         if not serializer.is_valid():
             return Response(
                 failure_response(
@@ -50,7 +55,9 @@ class AuthorDetail(APIView):
             Author, pk=pk
         )  # first arg can be either Model, Manager, or QuerySet object
 
-    def _get_serializer(self, *args, **kwargs):
+    def _get_serializer(self, *args, input=False, **kwargs):
+        if input:
+            return AuthorInputSerializer(*args, **kwargs)
         return AuthorSerializer(*args, **kwargs)
 
     def get(self, request, authorId: int):
@@ -68,7 +75,7 @@ class AuthorDetail(APIView):
         author = self._get_object(authorId)
         data = request.data.copy()
         data["user.role"] = USER_ROLES.AUTHOR.value
-        serializer = self._get_serializer(instance=author, data=data)
+        serializer = self._get_serializer(instance=author, data=data, input=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(
@@ -85,7 +92,9 @@ class AuthorDetail(APIView):
         data["user.role"] = USER_ROLES.AUTHOR.value
         if author.user.email == data.get("user.email"):
             data.pop("user.email")
-        serializer = self._get_serializer(instance=author, data=data, partial=True)
+        serializer = self._get_serializer(
+            instance=author, data=data, partial=True, input=True
+        )
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(

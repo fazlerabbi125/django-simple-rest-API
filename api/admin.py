@@ -8,12 +8,7 @@ from .models import *
 # Customize admin site: https://docs.djangoproject.com/en/5.0/ref/contrib/admin/#adminsite-objects
 class MyAdminSite(admin.AdminSite):
     login_form = CustomAdminAuthForm
-    
-    # def login(self, request: WSGIRequest, extra_context: dict | None = None) -> HttpResponse:
-    #     return super().login(request, extra_context)
 
-    # def logout(self, request: WSGIRequest, extra_context: dict | None = None) -> TemplateResponse:
-    #     return super().logout(request, extra_context)
     def has_permission(self, request: WSGIRequest) -> bool:
         return request.user.is_authenticated and request.user.role == USER_ROLES.ADMIN.value
 
