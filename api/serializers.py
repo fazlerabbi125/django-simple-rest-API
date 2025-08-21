@@ -31,15 +31,14 @@ class UserSerializer(serializers.ModelSerializer):
             validated_data["password"] = make_password(validated_data["password"])
 
         if validated_data.get("photo"):
-            if instance.photo:
-                instance.photo.delete()
+            if instance.photo: instance.photo.delete()
             validated_data["photo"].name = change_filename(validated_data["photo"])
 
         return super().update(instance, validated_data)
 
     class Meta:
         model = User
-        exclude = ['last_login']
+        exclude = ['last_login', 'user_permissions', 'groups']
         extra_kwargs = {"password": {"write_only": True}}
 
 

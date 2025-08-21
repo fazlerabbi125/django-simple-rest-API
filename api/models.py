@@ -42,15 +42,31 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=50,
         choices=[(role.value, role.name.capitalize()) for role in USER_ROLES],
     )
-    is_active: bool | None = None  # Remove inherited User attributes
-    is_staff: bool | None = None
-    is_superuser: bool | None = None
+    is_active: bool = True  # Remove inherited User db fields
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = [
         "name",
     ]  # fields prompted when creating a user via the createsuperuser management command
     objects: CustomUserManager = CustomUserManager()
+    
+    def has_perm(self, perm, obj=None):
+        if self.role == USER_ROLES.ADMIN.value:
+            return True
+        return super().has_perm(perm, obj)
+
+    def has_module_perms(self, app_label):
+        if self.role == USER_ROLES.ADMIN.value:
+            return True
+        return super().has_module_perms(app_label)
+    
+    @property
+    def is_staff(self):
+        return self.role == USER_ROLES.ADMIN.value
+    
+    @property
+    def is_superuser(self):
+        return self.role == USER_ROLES.ADMIN.value
 
     def __str__(self) -> str:
         return f"{self.pk}-{self.email}"
