@@ -7,7 +7,6 @@ from utils.handle_file import change_filename
 # https://www.django-rest-framework.org/api-guide/fields/
 # https://www.django-rest-framework.org/api-guide/relations/
 
-
 class BlogSerializer(serializers.ModelSerializer):
     """
     Object-level custom validation: https://www.django-rest-framework.org/api-guide/serializers/#object-level-validation
@@ -40,8 +39,35 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = "__all__"
+        exclude = ['last_login']
         extra_kwargs = {"password": {"write_only": True}}
+
+
+class UserInputSerializer(UserSerializer):
+    confirm_password = serializers.CharField(
+        label="Confirm Password",
+        style={"input_type": "password"},
+        trim_whitespace=False,
+        required=False,
+        write_only=True,
+        help_text="Must match the password field.",
+    )
+    
+    def validate(self, data: dict):
+        if data.get('password') and data['password'] != data.get('confirm_password'):
+            # Error key shows as non_field_errors if not passed as a dict
+            raise serializers.ValidationError({"confirm_password": "Passwords must match."})
+        return data
+    
+    def create(self, validated_data: dict):
+        if "confirm_password" in validated_data:
+            validated_data.pop("confirm_password")
+        return super().create(validated_data)
+
+    def update(self, instance: User, validated_data: dict):
+        if "confirm_password" in validated_data:
+            validated_data.pop("confirm_password")
+        return super().update(instance, validated_data)
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -66,8 +92,9 @@ class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
         fields = "__all__"
-        # depth=1
-
+        
+class AuthorInputSerializer(AuthorSerializer):
+    user = UserInputSerializer()
 
 class EntrySerializer(serializers.ModelSerializer):
     def to_representation(self, obj: Entry):

@@ -29,7 +29,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-48muj(-^mwyr_#@e!*u39lwc*ct$y*aw4%kh!v&l0xcno$e3(k"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = not bool(os.getenv("DISABLE_DEBUG"))
+DEBUG = os.getenv("DISABLE_DEBUG") != "True"
 
 ALLOWED_HOSTS = ["*"] if not DEBUG else []
 
@@ -44,15 +44,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "django_filters",
     "corsheaders",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",  # To create table for handling refresh tokens
-    "api",
+    "api.apps.ApiConfig", # path to your config class in apps.py in your Django app. Alternatively, you can just use the app name
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware", # For serving static files in any deployment environment and handle caching of static assets
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -136,6 +136,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticFiles"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # os.path.join(BASE_DIR, "static") also works
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -167,6 +171,13 @@ SIMPLE_JWT = {
 MEDIA_URL = "media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
+
+STORAGES = {
+    # Django’s default file storage is 'django.core.files.storage.FileSystemStorage'. If you don’t explicitly provide a storage system in the default key of the STORAGES setting, this is the one that will be used.
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 AUTH_USER_MODEL = "api.User"
 

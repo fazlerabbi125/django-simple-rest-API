@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator,
@@ -28,7 +28,7 @@ class Blog(models.Model):
         return f"{self.pk}-{self.name}"
 
 
-class User(AbstractBaseUser):
+class User(AbstractBaseUser, PermissionsMixin):
     name = models.CharField("full name", max_length=255)
     email = models.EmailField("email address", unique=True)
     createdAt = models.DateField(auto_now_add=True)
@@ -44,8 +44,9 @@ class User(AbstractBaseUser):
         max_length=50,
         choices=[(role.value, role.name.capitalize()) for role in USER_ROLES],
     )
-    is_active: None = None  # Remove inherited User attributes
-    last_login: None = None
+    is_active: bool | None = None  # Remove inherited User attributes
+    is_staff: bool | None = None
+    is_superuser: bool | None = None
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = [
