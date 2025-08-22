@@ -35,6 +35,7 @@ router.register(r"entries", EntryViewSet, basename="entry")
 # first arg in router register sets the prefix used by the path and basename is used as part of route name
 # We can also bind ViewSets explicitly: https://www.django-rest-framework.org/tutorial/6-viewsets-and-routers/#binding-viewsets-to-urls-explicitly
 
+app_name = "api"
 urlpatterns = [
     path("authors/", AuthorList.as_view(), name="author_list_create"),
     path(

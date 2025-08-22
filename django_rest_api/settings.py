@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",  # To create table for handling refresh tokens
+    'drf_spectacular', # For OpenAPI documentation
     "api.apps.ApiConfig", # path to your config class in apps.py in your Django app. Alternatively, you can just use the app name
 ]
 
@@ -136,7 +137,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticFiles"
+STATIC_ROOT = BASE_DIR / "staticFiles" # STATIC_ROOT should not be in STATICFILES_DIRS
 STATICFILES_DIRS = [
     BASE_DIR / "static",  # os.path.join(BASE_DIR, "static") also works
 ]
@@ -149,6 +150,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "utils.exception_handler.custom_exception_handler",
     "DEFAULT_AUTHENTICATION_CLASSES": ("api.auth.jwt_scheme.CustomJWTAuthentication",),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema'
 }
 
 SIMPLE_JWT = {
@@ -161,11 +163,26 @@ SIMPLE_JWT = {
     "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
+    # enable to allow token rotation and blacklisting and use of TokenRefreshSerializer and TokenBlacklistSerializer
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     # default config
     # "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
     # "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
     # "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
     # "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
+    # "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
+}
+
+# https://drf-spectacular.readthedocs.io/en/latest/settings.html
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'DRF Practice',
+    'DESCRIPTION': 'This is a practice project for learning Django Rest Framework.',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'VERSION': '1.0.0',
+    "SWAGGER_UI_SETTINGS": {
+        "displayRequestDuration": True
+    },
 }
 
 MEDIA_URL = "media/"
@@ -173,7 +190,9 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 STORAGES = {
-    # Django’s default file storage is 'django.core.files.storage.FileSystemStorage'. If you don’t explicitly provide a storage system in the default key of the STORAGES setting, this is the one that will be used.
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },

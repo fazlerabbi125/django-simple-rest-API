@@ -1,6 +1,7 @@
 from .models import *
 from rest_framework import serializers
 from django.contrib.auth.hashers import make_password
+from django.db import transaction
 from utils.handle_file import change_filename
 
 # https://www.django-rest-framework.org/api-guide/serializers/
@@ -31,14 +32,15 @@ class UserSerializer(serializers.ModelSerializer):
             validated_data["password"] = make_password(validated_data["password"])
 
         if validated_data.get("photo"):
-            if instance.photo: instance.photo.delete()
+            if instance.photo:
+                instance.photo.delete()
             validated_data["photo"].name = change_filename(validated_data["photo"])
 
         return super().update(instance, validated_data)
 
     class Meta:
         model = User
-        exclude = ['last_login', 'user_permissions', 'groups']
+        exclude = ["last_login", "user_permissions", "groups"]
         extra_kwargs = {"password": {"write_only": True}}
 
 
@@ -51,13 +53,15 @@ class UserInputSerializer(UserSerializer):
         write_only=True,
         help_text="Must match the password field.",
     )
-    
+
     def validate(self, data: dict):
-        if data.get('password') and data['password'] != data.get('confirm_password'):
+        if data.get("password") and data["password"] != data.get("confirm_password"):
             # Error key shows as non_field_errors if not passed as a dict
-            raise serializers.ValidationError({"confirm_password": "Passwords must match."})
+            raise serializers.ValidationError(
+                {"confirm_password": "Passwords must match."}
+            )
         return data
-    
+
     def create(self, validated_data: dict):
         if "confirm_password" in validated_data:
             validated_data.pop("confirm_password")
@@ -80,10 +84,13 @@ class AuthorSerializer(serializers.ModelSerializer):
 
     user = UserSerializer()
 
+    # DB transactions save changes to DB if all operations are successful or else the changes are rollbacked
+    @transaction.atomic
     def create(self, validated_data: dict):
         validated_data["user"] = self.fields["user"].create(validated_data.pop("user"))
         return super().create(validated_data)
 
+    @transaction.atomic
     def update(self, instance: Author, validated_data: dict):
         self.fields["user"].update(instance.user, validated_data.pop("user"))
         return super().update(instance, validated_data)
@@ -91,9 +98,11 @@ class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
         fields = "__all__"
-        
+
+
 class AuthorInputSerializer(AuthorSerializer):
     user = UserInputSerializer()
+
 
 class EntrySerializer(serializers.ModelSerializer):
     def to_representation(self, obj: Entry):

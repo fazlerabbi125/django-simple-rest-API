@@ -1,4 +1,3 @@
-from typing import Any
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.core.validators import (
@@ -72,10 +71,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f"{self.pk}-{self.email}"
 
     def delete(self, *args, **kwargs) -> tuple[int, dict[str, int]]:
-        if self.photo:
-            self.photo.delete()
-        return super().delete(*args, **kwargs)
-
+        photo = self.photo
+        res = super().delete(*args, **kwargs)
+        if photo: photo.delete()
+        return res
 
 class Author(models.Model):
     user = models.OneToOneField(

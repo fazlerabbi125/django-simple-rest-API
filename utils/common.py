@@ -20,3 +20,17 @@ def failure_response(message: str, errors: Optional[dict[str, list[str]]] = None
 class USER_ROLES(Enum):
     ADMIN = "admin"
     AUTHOR = "author"
+
+
+class ReqMethods(Enum):
+    GET = "GET"
+    POST = "POST"
+    PUT = "PUT"
+    PATCH = "PATCH"
+    DELETE = "DELETE"
+
+class SwaggerTags(Enum):
+    BLOG = "Blog"
+    ENTRY = "Entry"
+    AUTHOR = "Author"
+    AUTH = "Authentication"

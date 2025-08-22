@@ -7,6 +7,7 @@ from rest_framework_simplejwt.authentication import (
 from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import AccessToken
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
 
 class CustomJWTAuthentication(JWTAuthentication):
     def authenticate(
@@ -45,3 +46,14 @@ class CustomJWTAuthentication(JWTAuthentication):
                 str(e), code=status.HTTP_401_UNAUTHORIZED
             )
         return (user, validated_token)
+
+class CustomJWTAuthenticationExtension(OpenApiAuthenticationExtension):
+    target_class = 'api.auth.jwt_scheme.CustomJWTAuthentication' # Path to your custom class
+    name = 'JWT Authentication' # Name to display in Swagger UI
+
+    def get_security_definition(self, auto_schema):
+        return {
+            'type': 'http',
+            'scheme': 'bearer',
+            'bearerFormat': 'JWT',
+        }

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.core.handlers.wsgi import WSGIRequest
 from django.contrib.auth.admin import GroupAdmin
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group
 from .forms import CustomAdminAuthForm
 from .models import *
 
@@ -17,7 +17,6 @@ class MyAdminSite(admin.AdminSite):
 
 admin_site = MyAdminSite()
 admin_site.register(Group, GroupAdmin)
-admin_site.register(Permission)
 admin_site.register(User)
 admin_site.register(Blog)
 admin_site.register(Author)

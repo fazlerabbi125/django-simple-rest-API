@@ -1,22 +1,21 @@
 from rest_framework import permissions, request, status
 from utils.common import USER_ROLES
 
-class IsGuest(permissions.BasePermission):
+class IsAdmin(permissions.IsAuthenticated):
     code = status.HTTP_403_FORBIDDEN
 
     def has_permission(self, request: request.Request, view):
-        return not bool(request.auth)
+        return (
+            super().has_permission(request, view)
+            and request.user.role == USER_ROLES.ADMIN.value
+        )
 
-class IsAdmin(permissions.BasePermission):
+
+class IsAuthor(permissions.IsAuthenticated):
     code = status.HTTP_403_FORBIDDEN
 
     def has_permission(self, request: request.Request, view):
-        return bool(request.user and request.user.role == USER_ROLES.ADMIN.value)
-
-
-class isAuthor(permissions.BasePermission):
-    code = status.HTTP_403_FORBIDDEN
-
-    def has_permission(self, request: request.Request, view):
-        return bool(request.user and request.user.role == USER_ROLES.AUTHOR.value)
-
+        return (
+            super().has_permission(request, view)
+            and request.user.role == USER_ROLES.AUTHOR.value
+        )

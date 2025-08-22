@@ -22,6 +22,7 @@ from rest_framework import status
 from django.conf import settings
 from django.conf.urls.static import static
 from utils.common import failure_response
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 """
 https://docs.djangoproject.com/en/5.0/topics/http/views/#customizing-error-views
@@ -54,8 +55,16 @@ urlpatterns = (
     [
         # To use django admin view with custom user model, do the following: https://docs.djangoproject.com/en/5.0/topics/auth/customizing/#custom-users-and-django-contrib-admin
         path("admin/", admin_site.urls),
-        # path("api-auth/", include("rest_framework.urls")),
-        path("api/", include("api.urls")),
+        path("browsable-api-auth/", include("rest_framework.urls")),
+        # You can add common path prefix using include()
+        # See https://docs.djangoproject.com/en/4.2/ref/urls/#django.urls.include
+        path("api/", include([
+            path("", include("api.urls")),
+            path('schema/', include([
+                path('', SpectacularAPIView.as_view(), name='schema'),
+                path('swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger'),
+            ])),
+        ])),
     ]
     + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
